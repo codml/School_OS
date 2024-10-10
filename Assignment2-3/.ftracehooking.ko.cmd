@@ -1,0 +1,1 @@
+cmd_/home/os2020202034/Assignment2-3/ftracehooking.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000 -z noexecstack   --build-id  -T ./scripts/module-common.lds -o /home/os2020202034/Assignment2-3/ftracehooking.ko /home/os2020202034/Assignment2-3/ftracehooking.o /home/os2020202034/Assignment2-3/ftracehooking.mod.o;  true
