@@ -25,7 +25,7 @@ int main() {
 
 	clock_gettime(CLOCK_MONOTONIC, &s_time);
 
-	// 파일 오픈
+	// file open
     f_temp = fopen("temp.txt", "r");
     if (f_temp == NULL) {
         perror("Failed to open file");
@@ -41,7 +41,7 @@ int main() {
     }
 
 	// root process: read from file and write to pipe
-	for (int i = 0; i < MAX_PROCESSES && fscanf(f_temp, "%d\n%d\n", &num1, &num2) != EOF; i++) { // 두 수 읽기
+	for (int i = 0; i < MAX_PROCESSES && fscanf(f_temp, "%d\n%d\n", &num1, &num2) != EOF; i++) {
 		write(pipes[i][1], &num1, sizeof(int));
 		write(pipes[i][1], &num2, sizeof(int));
 		close(pipes[i][1]);
