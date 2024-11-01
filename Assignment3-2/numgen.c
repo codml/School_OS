@@ -1,17 +1,12 @@
 #include <stdio.h>
 
-#define MAX_PROCESSES 8
+#define MAX_PROCESSES 4
 
 int main() {
-    FILE *f_write = fopen("temp.txt", "wt");
+    FILE *f_write = fopen("temp.txt", "w");
 
-    for (int i = 0; i < MAX_PROCESSES*2; i++) {
-        if ((i+1) / 10 == 0)
-            fprintf(f_write, "  ");
-        else if (((i+1) / 10) / 10 == 0)
-            fprintf(f_write, " ");
+    for (int i = 0; i < MAX_PROCESSES*2; i++)
         fprintf(f_write, "%d\n", i+1);
-    }
 
     fclose(f_write);
     return 0;

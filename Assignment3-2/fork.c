@@ -1,44 +1,67 @@
 #include <stdio.h>
-#include <wait.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 #include <math.h>
 #include <time.h>
 
-#define MAX_PROCESSES 8
+#define MAX_PROCESSES 4
 
-int pow_i(int n, int i) {
-    int ret = 1;
+int get_idx(int idx, int i) {
+    int po;
+
+	po = 1;
     while (i--)
-        ret *= n;
-    return ret;
+        po *= 2;
+    return idx + po;
 }
 
 int main() {
     FILE *f_temp;
     char buf[12];
-    int num1, num2, sum, f_idx;
+    int num1, num2, sum, idx;
+	int pipes[MAX_PROCESSES][2];
     int exit_value;
     struct timespec s_time, f_time;
 
 	clock_gettime(CLOCK_MONOTONIC, &s_time);
 
+	// 파일 오픈
+    f_temp = fopen("temp.txt", "r");
+    if (f_temp == NULL) {
+        perror("Failed to open file");
+        return 1;
+    }
+
+    // generate pipes
+    for (int i = 0; i < MAX_PROCESSES; i++) {
+        if (pipe(pipes[i]) == -1) {
+            perror("pipe failed");
+            return 1;
+        }
+    }
+
+	// root process: read from file and write to pipe
+	for (int i = 0; i < MAX_PROCESSES && fscanf(f_temp, "%d\n%d\n", &num1, &num2) != EOF; i++) { // 두 수 읽기
+		write(pipes[i][1], &num1, sizeof(int));
+		write(pipes[i][1], &num2, sizeof(int));
+		close(pipes[i][1]);
+	}
+
+	fclose(f_temp);
+
 	if (fork()) 
 		wait(&exit_value);
 	else {
-        f_idx = 0;
+        idx = 0;
     	for (int i = 0; i < log2(MAX_PROCESSES); i++) {
             if (!fork())
-                f_idx += pow_i(2, i);
+                idx = get_idx(idx, i);
         }
-				
-        f_temp = fopen("temp.txt", "r");
-        fseek(f_temp, f_idx * 8, SEEK_SET);
-		fread(buf, 4, 1, f_temp);
-		num1 = atoi(buf);
-        fread(buf, 4, 1, f_temp);
-        num2 = atoi(buf);
-        fclose(f_temp);
+		
+		read(pipes[idx][0], &num1, sizeof(int));
+		read(pipes[idx][0], &num2, sizeof(int));
+		close(pipes[idx][0]);
 
 		sum = num1 + num2;
 		while (wait(&exit_value) >= 0)
