@@ -18,7 +18,6 @@ int get_idx(int idx, int i) {
 
 int main() {
     FILE *f_temp;
-    char buf[12];
     int num1, num2, sum, idx;
 	int pipes[MAX_PROCESSES][2];
     int exit_value;
