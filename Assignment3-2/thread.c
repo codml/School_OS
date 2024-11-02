@@ -15,7 +15,6 @@ pthread_t tid[MAX_PROCESSES*2];
 
 void *thread_func(void *arg) {
     long sum = ((struct nums *)arg)->num1 + ((struct nums *)arg)->num2;
-    printf("%d + %d = %ld\n", ((struct nums *)arg)->num1, ((struct nums *)arg)->num2, sum);
     free(arg);
     pthread_exit((void *)sum);
 }
@@ -25,6 +24,7 @@ int main() {
     struct timespec s_time, f_time;
     struct nums *pNum;
     int sum;
+    double runtime;
 
     clock_gettime(CLOCK_MONOTONIC, &s_time);
 
@@ -43,7 +43,7 @@ int main() {
     }
     pthread_join(tid[1], (void**)&sum);
     clock_gettime(CLOCK_MONOTONIC, &f_time);
-	double runtime = (f_time.tv_sec - s_time.tv_sec) + (f_time.tv_nsec - s_time.tv_nsec) / pow(10, 9);
-	printf("sum: %d, second: %lf\n", sum, runtime);
+	runtime = (f_time.tv_sec - s_time.tv_sec) + (f_time.tv_nsec - s_time.tv_nsec) / pow(10, 9);
+	printf("value of thread : %d\n%lf\n", sum, runtime);
     return 0;
 }

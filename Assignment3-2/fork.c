@@ -5,16 +5,7 @@
 #include <math.h>
 #include <time.h>
 
-#define MAX_PROCESSES 4
-
-int get_idx(int idx, int i) {
-    int po;
-
-	po = 1;
-    while (i--)
-        po *= 2;
-    return idx + po;
-}
+#define MAX_PROCESSES 64
 
 int main() {
     FILE *f_temp;
@@ -22,6 +13,7 @@ int main() {
 	int pipes[MAX_PROCESSES][2];
     int exit_value;
     struct timespec s_time, f_time;
+	double runtime;
 
 	clock_gettime(CLOCK_MONOTONIC, &s_time);
 
@@ -47,15 +39,15 @@ int main() {
 		close(pipes[i][1]);
 	}
 
-	fclose(f_temp);
+	fclose(f_temp); // close file
 
 	if (fork()) 
-		wait(&exit_value);
+		wait(&exit_value); // main process: wait child's exit value
 	else {
         idx = 0;
     	for (int i = 0; i < log2(MAX_PROCESSES); i++) {
             if (!fork())
-                idx = get_idx(idx, i);
+                idx +=  1 << i;
         }
 		
 		read(pipes[idx][0], &num1, sizeof(int));
@@ -68,7 +60,7 @@ int main() {
 		exit(sum);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &f_time);
-	double runtime = (f_time.tv_sec - s_time.tv_sec) + (f_time.tv_nsec - s_time.tv_nsec) / pow(10, 9);
-	printf("sum: %d, second: %lf\n", exit_value >> 8, runtime);
+	runtime = (f_time.tv_sec - s_time.tv_sec) + (f_time.tv_nsec - s_time.tv_nsec) / pow(10, 9);
+	printf("value of fork : %d\n%lf\n", exit_value >> 8, runtime);
     return 0;
 }
