@@ -15,8 +15,6 @@ int main() {
     struct timespec s_time, f_time;
 	double runtime;
 
-	clock_gettime(CLOCK_MONOTONIC, &s_time);
-
 	// file open
     f_temp = fopen("temp.txt", "r");
     if (f_temp == NULL) {
@@ -41,26 +39,28 @@ int main() {
 
 	fclose(f_temp); // close file
 
+	clock_gettime(CLOCK_MONOTONIC, &s_time); // start time for fork()
+
 	if (fork()) 
 		wait(&exit_value); // main process: wait child's exit value
 	else {
-        idx = 0;
+        idx = 0; // initial index
     	for (int i = 0; i < log2(MAX_PROCESSES); i++) {
             if (!fork())
-                idx +=  1 << i;
+                idx +=  1 << i; // update processes' unique index
         }
 		
-		read(pipes[idx][0], &num1, sizeof(int));
-		read(pipes[idx][0], &num2, sizeof(int));
-		close(pipes[idx][0]);
+		read(pipes[idx][0], &num1, sizeof(int)); // read from pipe(first num)
+		read(pipes[idx][0], &num2, sizeof(int)); // read from pipe(second num)
+		close(pipes[idx][0]); // close pipe
 
-		sum = num1 + num2;
-		while (wait(&exit_value) >= 0)
-			sum += exit_value >> 8;
-		exit(sum);
+		sum = num1 + num2; // all process doing sum
+		while (wait(&exit_value) >= 0) // until process has no child
+			sum += exit_value >> 8; // my sum + child's sum
+		exit(sum); // exit process and pass value
 	}
-	clock_gettime(CLOCK_MONOTONIC, &f_time);
+	clock_gettime(CLOCK_MONOTONIC, &f_time); // finish time
 	runtime = (f_time.tv_sec - s_time.tv_sec) + (f_time.tv_nsec - s_time.tv_nsec) / pow(10, 9);
-	printf("value of fork : %d\n%lf\n", exit_value >> 8, runtime);
+	printf("value of fork : %d\n%lf\n", exit_value >> 8, runtime); // return result
     return 0;
 }

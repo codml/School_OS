@@ -1,5 +1,5 @@
 CC = gcc
-LDFLAGS = -pthread -g
+LDFLAGS = -pthread
 NAME = numgen fork thread
 
 all : $(NAME)
