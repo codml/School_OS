@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>
 
-#define MAX_PROCESSES 64
+#define MAX_PROCESSES 8
 
 /// for arg in pthread_create ///
 struct nums {
@@ -15,15 +15,20 @@ struct nums {
 /// store thread ids created ///
 pthread_t tid[MAX_PROCESSES*2];
 
+/// shared file descriptor ///
+FILE *f_temp_w;
+
 /// each thread call this function: sum two nums and return the result ///
 void *thread_func(void *arg) {
     long sum = ((struct nums *)arg)->num1 + ((struct nums *)arg)->num2;
+    fprintf(f_temp_w, "%ld\n", sum);
     free(arg);
     pthread_exit((void *)sum);
 }
 
 int main() {
-    FILE *f_temp = fopen("temp.txt", "r"); // open file
+    FILE *f_temp = fopen("temp.txt", "r"); // to read file
+    f_temp_w = fopen("temp.txt", "a"); // to write file: append
     struct timespec s_time, f_time;
     struct nums *pNum;
     int sum;
@@ -37,7 +42,6 @@ int main() {
         fscanf(f_temp, "%d\n%d\n", &(pNum->num1), &(pNum->num2));
         pthread_create(tid+i, NULL, thread_func, (void *)pNum);
     }
-    fclose(f_temp);
 
     /// read two nums from exited thread(retrieve by join) ///
     /// and make thread with the two nums /// 
@@ -48,6 +52,8 @@ int main() {
         pthread_create(tid+i, NULL, thread_func, (void *)pNum);
     }
     pthread_join(tid[1], (void**)&sum); // retrieve the result
+    fclose(f_temp);
+    fclose(f_temp_w);
     clock_gettime(CLOCK_MONOTONIC, &f_time); // finish time
 	runtime = (f_time.tv_sec - s_time.tv_sec) + (f_time.tv_nsec - s_time.tv_nsec) / pow(10, 9);
 	printf("value of thread : %d\n%lf\n", sum, runtime); // print result

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define MAX_PROCESSES 64
+#define MAX_PROCESSES 8
 
 int main() {
     FILE *f_write = fopen("temp.txt", "w"); // file open
