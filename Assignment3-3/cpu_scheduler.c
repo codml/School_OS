@@ -41,6 +41,19 @@ int FCFS(struct process *list, int len) {
 	int running = -1;
 
 	printf("Gantt Chart:\n|");
+	
+	/// insertion sort ///
+	for (int i = 1; i < len; i++) {
+		struct process pivot = list[i];
+		int j;
+		for (j = i - 1; j >= 0; j--) {
+			if (list[j].start > pivot.start)
+				list[j+1] = list[j];
+			else
+				break;
+		}
+		list[j+1] = pivot;
+	}
 
 	for (; fin_cnt < len; time++) {
 		if (running == -1 || list[running].remain == 0) {
@@ -137,7 +150,6 @@ int SRTF(struct process *list, int len) {
 			list[running].finish = time;
 			list[running].end = 1;
 			running = -1;
-			context_switch++;
 			fin_cnt++;
 		}
 		int min = INT_MAX;
@@ -149,13 +161,13 @@ int SRTF(struct process *list, int len) {
 			}
 		}
 		if (min_idx != -1) {
-			if (running != -1 && running != min_idx)
+			if (running != min_idx)
 				context_switch++;
 			running = min_idx;
 			if (list[running].burst == list[running].remain)
 				list[running].start = time;
 		}
-		if (running == -1) {
+		else {
 			if (fin_cnt < len)
 				printf(" |");
 			continue;
@@ -177,7 +189,77 @@ int SRTF(struct process *list, int len) {
 
 int RR(struct process *list, int len, int time_slice) {
 	int context_switch = 0;
+	int fin_cnt = 0;
+	int running = -1;
+	int time = 0;
+	int prev_run;
+	int cur_slice;
+	int queue[MAX_SIZE];
+	int head = 0;
+	int tail = 0;
 
+	printf("Gantt Chart:\n|");
+
+	/// insertion sort ///
+	for (int i = 1; i < len; i++) {
+		struct process pivot = list[i];
+		int j;
+		for (j = i - 1; j >= 0; j--) {
+			if (list[j].start > pivot.start)
+				list[j+1] = list[j];
+			else
+				break;
+		}
+		list[j+1] = pivot;
+	}
+
+	for (; fin_cnt < len; time++) {
+		// queue::push()
+		for (int i = 0; i < len; i++) {
+			if (time == list[i].arrival)
+				queue[tail++] = i;
+		}
+
+		// done job
+		if (running != -1 && list[running].remain == 0) {
+			list[running].finish = time;
+			list[running].end = 1;
+			running = -1;
+			fin_cnt++;
+		}
+		else if(running != -1 && cur_slice == 0) {
+			// push time slice done job
+			queue[tail++] = running;
+			running = -1;
+		}
+
+		if (running == -1) {
+			cur_slice = time_slice;
+			if (head == tail) {
+				if (fin_cnt < len)
+					printf(" |");
+				continue;
+			}
+			running = queue[head++];
+			if (list[running].burst == list[running].remain)
+				list[running].start = time;
+			if (prev_run != running)
+				context_switch++;
+		}
+		list[running].remain -= 1;
+		prev_run = running;
+		cur_slice--;
+		printf(" P%d |", list[running].pid);
+	}
+
+	for (int i = 0 ; i < len; i++)
+		list[i].waiting = list[i].finish - list[i].arrival - list[i].burst;
+	for (int i = 0; i < len; i++)
+		list[i].response = list[i].start - list[i].arrival;
+	for (int i = 0; i < len; i++)
+		list[i].turnaround = list[i].finish - list[i].arrival;
+
+	printf("\n");
 	return context_switch;
 }
 
