@@ -29,7 +29,6 @@ struct process {
 
 /// read file and make process array ///
 struct process * init_list(FILE *f_temp, int *len) {
-	char 			buf[30];
 	struct process	p;
 	struct process	*ptr;
 	int 			cnt = 0;
@@ -230,19 +229,6 @@ int RR(struct process *list, int len, int time_slice) {
 	///
 
 	printf("Gantt Chart:\n|");
-
-	/// insertion sort ///
-	for (int i = 1; i < len; i++) {
-		struct process pivot = list[i];
-		int j;
-		for (j = i - 1; j >= 0; j--) {
-			if (list[j].arrival > pivot.arrival)
-				list[j+1] = list[j];
-			else
-				break;
-		}
-		list[j+1] = pivot;
-	}
 
 	for (; fin_cnt < len; time++) {
 		// push processes arrived in queue

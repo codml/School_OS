@@ -5,7 +5,7 @@
 #include <math.h>
 #include <time.h>
 
-#define MAX_PROCESSES 8
+#define MAX_PROCESSES 64
 
 int main() {
     FILE *f_temp, *f_temp_w;
@@ -17,7 +17,7 @@ int main() {
 
 	// file open
     f_temp = fopen("temp.txt", "r");
-	f_temp = fopen("temp.txt", "a");
+	f_temp_w = fopen("temp.txt", "a");
     if (f_temp == NULL || f_temp_w == NULL) {
         perror("Failed to open file");
         return 1;

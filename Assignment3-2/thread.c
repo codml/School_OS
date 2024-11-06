@@ -4,7 +4,7 @@
 #include <math.h>
 #include <time.h>
 
-#define MAX_PROCESSES 8
+#define MAX_PROCESSES 64
 
 /// for arg in pthread_create ///
 struct nums {
