@@ -1,0 +1,1 @@
+cmd_/home/os2020202034/OS_assignment/Assignment4-1/file_varea.mod := { echo  /home/os2020202034/OS_assignment/Assignment4-1/file_varea.o;  echo; } > /home/os2020202034/OS_assignment/Assignment4-1/file_varea.mod
