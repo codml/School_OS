@@ -133,7 +133,6 @@ void CLOCK(int max, int len, int string[]) {
 	int idx, evict;
 	queue q;
 	queue bit_queue;
-
 	
 	printf("Clock Algorithm: \n");
 	init(&q, max);
@@ -169,7 +168,7 @@ void CLOCK(int max, int len, int string[]) {
 			}
 			if (idx == -1) {
 				push(&q, string[i], q.tail);
-				push(&bit_queue, 0, q.tail);
+				push(&bit_queue, 0, bit_queue.tail);
 			} else {
 				push(&q, string[i], idx);
 				push(&bit_queue, 0, idx);
@@ -184,7 +183,7 @@ void CLOCK(int max, int len, int string[]) {
 		for (int i = 0; i < q.tail; i++)
 			printf("%d (%d) ", q.arr[i], bit_queue.arr[i]);
 		printf("next evict: %d\n", evict);
-}
+	}
 
 	printf("Number of Page Faults: %d\n", page_fault);
 	printf("Page Fault Rate: %.2lf%%\n", page_fault * 100 / (double)len);
