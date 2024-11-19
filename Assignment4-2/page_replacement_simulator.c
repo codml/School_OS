@@ -3,19 +3,25 @@
 #include <string.h>
 
 #define MAX_SIZE 1000
+
+// queue for pages //
+// actually, it's simillar with linked list //
+// there is no empty place arr[0, tail] //
 typedef struct {
 	int		arr[MAX_SIZE];
 	int		tail;
 	int		len;
 } queue;
 
-
+// initialize queue //
 void init(queue *q, int size) {
 	q->tail = 0;
 	q->len = size;
 }
 
 // push to idx //
+// if idx < tail, push back arr[idx, tail] //
+// and push //
 void push(queue *q, int num, int idx) {
 	for (int i = q->tail; i > idx; i--)
 		q->arr[i] = q->arr[i-1];
@@ -23,13 +29,15 @@ void push(queue *q, int num, int idx) {
 	q->tail++;
 }
 
-// pop from idx //  
+// pop from idx //
+// if idx < tail, move forward arr[idx, tail] //  
 void pop(queue *q, int idx) {
 	for (int i = idx; i < q->tail; i++)
 		q->arr[i] = q->arr[i+1];
 	q->tail--;
 }
 
+// determine full or not //
 int isFull(queue *q) {
 	if (q->tail == q->len)
 		return 1;
@@ -46,6 +54,7 @@ int isHere(queue *q, int num) {
 	return -1;
 }
 
+// optimal algorithm: evict farest frame //
 void OPT(int max, int len, int string[]) {
 	int page_fault = 0;
 	int idx, delete_idx;
@@ -56,17 +65,24 @@ void OPT(int max, int len, int string[]) {
 	init(&q, max);
 
 	for (int i = 0; i < len; i++) {
+		// if page frame is not in queue //
 		if (isHere(&q, string[i]) == -1) {
 			page_fault++;
+			// if queue is full: need to evict //
 			if (isFull(&q)) {
+				// visit: record queue's visit //
 				visit = (char *)malloc(q.len);
 				memset(visit, 0, q.len);
+
+				// check future page using //
 				for (int j = i+1; j < len; j++) {
 					if ((idx = isHere(&q, string[j])) != -1 && visit[idx] == 0) {
 						visit[idx] = 1;
 						delete_idx = idx;
 					}
 				}
+
+				// if there is a page which will never visit in future, evict //
 				for (idx = 0; idx < q.len; idx++) {
 					if (visit[idx] == 0) {
 						pop(&q, idx);
@@ -74,12 +90,17 @@ void OPT(int max, int len, int string[]) {
 					}
 				}
 				free(visit);
+
+				// evict page used in longest period //
 				if (idx == q.len)
 					pop(&q, delete_idx);
 			}
+			// push queue new page //
 			push(&q, string[i], q.tail);
 		}
 	}
+
+	// print page fault //
 	printf("Number of Page Faults: %d\n", page_fault);
 	printf("Page Fault Rate: %.2lf%%\n", page_fault * 100 / (double)len);
 }
@@ -92,11 +113,13 @@ void FIFO(int max, int len, int string[]) {
 	init(&q, max);
 
 	for (int i = 0; i < len; i++) {
+		// if page is not in queue // 
 		if (isHere(&q, string[i]) == -1) {
 			page_fault++;
+			// if full//
 			if (isFull(&q))
-				pop(&q, 0);
-			push(&q, string[i], q.tail);
+				pop(&q, 0); // evict oldest page
+			push(&q, string[i], q.tail); // push new page
 		}
 	}
 
@@ -113,13 +136,17 @@ void LRU(int max, int len, int string[]) {
 	init(&q, max);
 
 	for (int i = 0; i < len; i++) {
+		// if page is not in queue //
 		if ((idx = isHere(&q, string[i])) == -1) {
 			page_fault++;
+			// same with FIFO //
 			if (isFull(&q))
 				pop(&q, 0);
 			push(&q, string[i], q.tail);
 		} else {
+			// if page is in queue //
 			pop(&q, idx);
+			// push page to highest place in queue //
 			push(&q, string[i], q.tail);
 		}
 	}
@@ -132,17 +159,23 @@ void CLOCK(int max, int len, int string[]) {
 	int page_fault = 0;
 	int idx, evict;
 	queue q;
-	queue bit_queue;
+	queue bit_queue; // store page's use bit
 	
 	printf("Clock Algorithm: \n");
 	init(&q, max);
 	init(&bit_queue, max);
-	evict = 0; // relative evict position
+	evict = 0; // point evict position
 
 	for (int i = 0; i < len; i++) {
+		// if page is not in queue //
 		if ((idx = isHere(&q, string[i])) == -1) {
 			page_fault++;
+			// if full: evict
 			if (isFull(&q)) {
+				// traversal queue: evict -> tail -> evict-1 //
+				// like circular queue //
+				// if use bit: 0->evict //
+				// else(use bit: 1) use bit -> 0 //
 				for (idx = evict; idx < q.len; idx++) {
 					if (bit_queue.arr[idx] == 0) {
 						pop(&q, idx);
@@ -165,24 +198,25 @@ void CLOCK(int max, int len, int string[]) {
 						pop(&bit_queue, idx);
 					}
 				}
+				////////////////////
 			}
 			if (idx == -1) {
+				// just push to queue, not full->evict->push //
 				push(&q, string[i], q.tail);
 				push(&bit_queue, 0, bit_queue.tail);
 			} else {
+				// idx: evict place -> also push place for new page //
 				push(&q, string[i], idx);
 				push(&bit_queue, 0, idx);
 			}
+			// update evict pointer: +1 or go to head //
 			evict = idx;
 			if (evict == q.tail - 1)
 				evict = 0;
 			else
 				evict++;
 		} else
-			bit_queue.arr[idx] = 1;
-		for (int i = 0; i < q.tail; i++)
-			printf("%d (%d) ", q.arr[i], bit_queue.arr[i]);
-		printf("next evict: %d\n", evict);
+			bit_queue.arr[idx] = 1; // reference: use bit->1
 	}
 
 	printf("Number of Page Faults: %d\n", page_fault);
