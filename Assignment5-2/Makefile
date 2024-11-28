@@ -7,4 +7,7 @@ all : $(NAME)
 	$(CC) -o $(NAME) $@ $<
 
 clean : 
-	rm -rf $(NAME) $(FILES)
+	rm -rf $(NAME)
+
+reset :
+	rm -rf $(FILES)
